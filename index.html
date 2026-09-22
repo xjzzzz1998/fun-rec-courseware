@@ -47,10 +47,15 @@
     main { min-width: 0; }
     .topbar { position: sticky; top: 0; z-index: 3; display:flex; align-items:center; gap: 14px; padding: 14px 34px; background: rgba(246,247,251,.9); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(229,232,240,.8); }
     .search { flex: 1; max-width: 620px; position: relative; }
-    .search input { width:100%; padding: 11px 14px 11px 38px; border:1px solid var(--line); border-radius: 12px; background:#fff; color:var(--ink); outline:none; }
+    .search input { width:100%; padding: 11px 108px 11px 38px; border:1px solid var(--line); border-radius: 12px; background:#fff; color:var(--ink); outline:none; }
     .search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(91,92,226,.12); }
     .search span { position:absolute; left:13px; top:8px; color:var(--muted); font-size:18px; }
-    .search small { position:absolute; right:12px; top:10px; color:var(--muted); font-size:11px; pointer-events:none; }
+    .search small { position:absolute; right:76px; top:10px; color:var(--muted); font-size:11px; pointer-events:none; }
+    .search-jump { position:absolute; top:7px; width:28px; height:28px; border:1px solid var(--line); border-radius:7px; color:var(--brand); background:#fff; cursor:pointer; font-size:15px; line-height:1; }
+    .search-jump:hover:not(:disabled) { background:var(--soft); }
+    .search-jump:disabled { color:#b8bdcc; background:#f7f8fb; cursor:not-allowed; }
+    #searchPrev { right:42px; }
+    #searchNext { right:8px; }
     mark.search-hit {
       padding: 1px 3px; border-radius: 4px;
       color: #231900 !important; background: #ffd84d !important;
@@ -136,9 +141,10 @@
       nav { margin-top:8px; max-height:180px; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:3px; }
       nav a { padding:8px 9px; font-size:12px; line-height:1.35; }
       .topbar { gap:8px; padding:9px 12px; }
-      .search input { min-height:42px; padding-left:35px; padding-right:72px; font-size:14px; }
+      .search input { min-height:42px; padding-left:35px; padding-right:108px; font-size:14px; }
       .search span { left:11px; top:8px; }
-      .search small { top:11px; right:9px; font-size:10px; }
+      .search small { top:11px; right:76px; font-size:10px; }
+      .search-jump { top:6px; width:28px; height:29px; }
       .content { padding:18px 12px 46px; }
       .hero { padding:22px 18px; border-radius:17px; }
       .hero h2 { margin-top:12px; font-size:28px; }
@@ -173,7 +179,7 @@
       nav { grid-template-columns:1fr; max-height:210px; }
       .hero h2 { font-size:25px; }
       .search small { display:none; }
-      .search input { padding-right:12px; }
+      .search input { padding-right:76px; }
     }
   </style>
 </head>
@@ -212,7 +218,13 @@
 
     <main>
       <div class="topbar">
-        <div class="search"><span>⌕</span><input id="searchInput" placeholder="搜索：Redis、DeepFM、冷启动……" aria-label="搜索课件内容" /><small id="searchStatus" aria-live="polite"></small></div>
+        <div class="search">
+          <span>⌕</span>
+          <input id="searchInput" placeholder="搜索：Redis、DeepFM、冷启动……" aria-label="搜索课件内容" />
+          <small id="searchStatus" aria-live="polite"></small>
+          <button id="searchPrev" class="search-jump" type="button" aria-label="上一个搜索结果" title="上一个（Shift+Enter）">↑</button>
+          <button id="searchNext" class="search-jump" type="button" aria-label="下一个搜索结果" title="下一个（Enter）">↓</button>
+        </div>
         <a class="repo" href="https://github.com/datawhalechina/fun-rec/tree/master/web_project" target="_blank" rel="noreferrer">打开 GitHub ↗</a>
       </div>
 
@@ -1718,8 +1730,11 @@ is_click = 0  # 负样本</code></pre>
 
     const searchInput = document.getElementById('searchInput');
     const searchStatus = document.getElementById('searchStatus');
+    const searchPrev = document.getElementById('searchPrev');
+    const searchNext = document.getElementById('searchNext');
     let searchMatches = [];
     let searchHits = [];
+    let searchCursor = -1;
 
     // 取出章节的完整可见文本和代码文本。textContent 比 innerText 更适合搜索，
     // 因为 innerText 在部分浏览器中会忽略折叠 details 内的内容。
@@ -1743,6 +1758,9 @@ is_click = 0  # 负样本</code></pre>
         delete details.dataset.searchOpened;
       });
       searchHits = [];
+      searchCursor = -1;
+      searchPrev.disabled = true;
+      searchNext.disabled = true;
     }
 
     function highlightSection(section, query) {
@@ -1814,28 +1832,44 @@ is_click = 0  # 负样本</code></pre>
         }
       });
 
-      searchHits.forEach((hit, index) => hit.classList.toggle('current', index === 0));
-
       if (!q) {
         searchStatus.textContent = '';
       } else if (searchMatches.length) {
-        searchStatus.textContent = `${searchHits.length} 处 / ${searchMatches.length} 章`;
+        searchCursor = searchHits.length ? 0 : -1;
+        searchHits.forEach((hit, index) => hit.classList.toggle('current', index === searchCursor));
+        searchPrev.disabled = searchHits.length === 0;
+        searchNext.disabled = searchHits.length === 0;
+        searchStatus.textContent = searchHits.length
+          ? `1 / ${searchHits.length} 处 · ${searchMatches.length} 章`
+          : `${searchMatches.length} 章`;
       } else {
         searchStatus.textContent = '无结果';
+        searchPrev.disabled = true;
+        searchNext.disabled = true;
       }
 
       // 用户可能正停留在页面底部；筛选后主动把第一个黄色命中带到视野中。
       if (q && searchHits.length) {
         requestAnimationFrame(() => {
-          searchHits[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          searchHits[searchCursor].scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       }
     }
 
+    function moveSearchCursor(step) {
+      if (!searchHits.length) return;
+      searchCursor = (searchCursor + step + searchHits.length) % searchHits.length;
+      searchHits.forEach((hit, index) => hit.classList.toggle('current', index === searchCursor));
+      searchStatus.textContent = `${searchCursor + 1} / ${searchHits.length} 处 · ${searchMatches.length} 章`;
+      searchHits[searchCursor].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     searchInput.addEventListener('input', runSearch);
+    searchPrev.addEventListener('click', () => moveSearchCursor(-1));
+    searchNext.addEventListener('click', () => moveSearchCursor(1));
     searchInput.addEventListener('keydown', event => {
       if (event.key === 'Enter' && searchHits.length) {
-        searchHits[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        moveSearchCursor(event.shiftKey ? -1 : 1);
       } else if (event.key === 'Enter' && searchMatches.length) {
         searchMatches[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
