@@ -6,7 +6,7 @@
 
 课件已经通过 GitHub Pages 发布：
 
-<https://xianjiezeng.github.io/fun-rec-courseware/>
+<https://xjzzzz1998.github.io/fun-rec-courseware/>
 
 ## 课件内容
 
