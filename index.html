@@ -968,16 +968,16 @@ watch(
 
           <div class="card" style="margin-top:15px">
             <h3>1.8 Vue 模板的 v-if、v-for、props</h3>
-            <pre><button class="copy">复制</button><code><template>
-  <div v-if="loading">加载中...</div>
+            <pre><button class="copy">复制</button><code>&lt;template&gt;
+  &lt;div v-if="loading"&gt;加载中...&lt;/div&gt;
 
-  <MovieCard
+  &lt;MovieCard
     v-else
     v-for="movie in movies"
     :key="movie.movie_id"
     :movie="movie"
-  />
-</template></code></pre>
+  /&gt;
+&lt;/template&gt;</code></pre>
             <ul>
               <li><code>v-if</code> 根据条件决定是否渲染。</li>
               <li><code>v-for</code> 把数组中的每个电影变成一个组件。</li>
@@ -1384,20 +1384,20 @@ onMounted(() => {
 })
 
 // MovieRow.vue
-<template>
-  <template v-if="loading">
-    <div v-for="i in 10" :key="i" class="skeleton" />
-  </template>
-  <template v-else-if="movies.length">
-    <MovieCard
+&lt;template&gt;
+  &lt;template v-if="loading"&gt;
+    &lt;div v-for="i in 10" :key="i" class="skeleton" /&gt;
+  &lt;/template&gt;
+  &lt;template v-else-if="movies.length"&gt;
+    &lt;MovieCard
       v-for="movie in movies"
       :key="movie.movie_id"
       :movie="movie"
       :width="cardWidth"
-    />
-  </template>
-  <div v-else>No movies found</div>
-</template></code></pre>
+    /&gt;
+  &lt;/template&gt;
+  &lt;div v-else&gt;No movies found&lt;/div&gt;
+&lt;/template&gt;</code></pre>
             <p>前端链路是：<code>onMounted</code> 触发函数 → <code>api.js</code> 发 Axios 请求 → 后端返回 <code>items</code> → 写入响应式数组 → Vue 自动重新渲染卡片。</p></div>
           </details>
 
